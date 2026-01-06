@@ -202,7 +202,7 @@ export default function MonthlyGoalCard({
               onChange={(e) => setTargetValue(e.target.value)}
               placeholder="例: 70（体重の場合）、20（回数の場合）"
               step="0.1"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
             />
           </div>
           <div>
@@ -214,7 +214,7 @@ export default function MonthlyGoalCard({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="目標についての詳細やメモ"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
             />
           </div>
           <div className="flex gap-3">
