@@ -77,28 +77,30 @@ export default function EditRecordModal({
     setIsSaving(true);
 
     try {
-      let menuPhotoUrl = record.menuPhotoUrl;
-      let bodyPhotoUrl = record.bodyPhotoUrl;
+      let menuPhotoUrl: string | undefined = record.menuPhotoUrl;
+      let bodyPhotoUrl: string | undefined = record.bodyPhotoUrl;
 
-      // 新しい写真が選択されていたら変換
+      // 新しい写真が選択されていたらFirebase Storageにアップロード
       if (menuPhoto) {
-        menuPhotoUrl = await fileToBase64(menuPhoto);
+        const timestamp = Date.now();
+        menuPhotoUrl = await uploadPhoto(menuPhoto, `menu/${timestamp}_${menuPhoto.name}`);
       } else if (!record.menuPhotoUrl) {
-        // 写真がなく、既存の写真もない場合は空文字
+        // 写真がなく、既存の写真もない場合はundefined
         menuPhotoUrl = undefined;
       }
       if (bodyPhoto) {
-        bodyPhotoUrl = await fileToBase64(bodyPhoto);
+        const timestamp = Date.now();
+        bodyPhotoUrl = await uploadPhoto(bodyPhoto, `body/${timestamp}_${bodyPhoto.name}`);
       } else if (!record.bodyPhotoUrl) {
-        // 写真がなく、既存の写真もない場合は空文字
+        // 写真がなく、既存の写真もない場合はundefined
         bodyPhotoUrl = undefined;
       }
 
       // データを更新
-      updateTrainingRecord(record.id, {
+      await updateTrainingRecord(record.id, {
         date,
-        menuPhotoUrl: menuPhotoUrl || undefined,
-        bodyPhotoUrl: bodyPhotoUrl || undefined,
+        menuPhotoUrl,
+        bodyPhotoUrl,
         memo,
         weight: weight ? parseFloat(weight) : undefined,
       });
