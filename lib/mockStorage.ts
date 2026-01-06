@@ -57,28 +57,51 @@ export async function saveTrainingRecord(data: {
   memo: string;
   weight?: number;
 }): Promise<string> {
-  const records = getTrainingRecords();
-  const newRecord: TrainingRecord = {
-    id: Date.now().toString(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    comments: [],
-    likes: 0,
-  };
-  records.push(newRecord);
-  // 日付順にソート（新しい順）
-  records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  return newRecord.id;
+  try {
+    const records = getTrainingRecords();
+    const newRecord: TrainingRecord = {
+      id: Date.now().toString(),
+      ...data,
+      createdAt: new Date().toISOString(),
+      comments: [],
+      likes: 0,
+    };
+    records.push(newRecord);
+    // 日付順にソート（新しい順）
+    records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    // localStorageに保存
+    const jsonData = JSON.stringify(records);
+    localStorage.setItem(STORAGE_KEY, jsonData);
+    
+    // デバッグ用：保存が成功したことを確認
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      throw new Error("localStorageへの保存に失敗しました");
+    }
+    
+    return newRecord.id;
+  } catch (error) {
+    console.error("記録の保存中にエラーが発生しました:", error);
+    throw error;
+  }
 }
 
 // トレーニング記録を取得
 export function getTrainingRecords(): TrainingRecord[] {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return [];
   try {
-    return JSON.parse(data);
-  } catch {
+    // ブラウザ環境でない場合は空配列を返す
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return [];
+    }
+    
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) return [];
+    
+    const records = JSON.parse(data);
+    return Array.isArray(records) ? records : [];
+  } catch (error) {
+    console.error("記録の取得中にエラーが発生しました:", error);
     return [];
   }
 }

@@ -130,7 +130,8 @@ export default function PhotoUploadForm() {
       if (bodyInput) bodyInput.value = "";
     } catch (error) {
       console.error("エラーが発生しました:", error);
-      alert("保存に失敗しました。もう一度お試しください。");
+      const errorMessage = error instanceof Error ? error.message : "不明なエラー";
+      alert(`保存に失敗しました: ${errorMessage}\n\nブラウザの開発者ツール（F12）のコンソールを確認してください。`);
     } finally {
       setIsUploading(false);
     }
