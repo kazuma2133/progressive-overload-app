@@ -189,7 +189,7 @@ export default function MonthlyGoalCard({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例: 体重を70kgまで減らす、月に20回トレーニングする"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
             />
           </div>
           <div>
