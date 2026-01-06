@@ -18,6 +18,11 @@ const firebaseConfig = {
 // Firebaseアプリを初期化（既に初期化されている場合は再利用）
 let app: FirebaseApp;
 if (getApps().length === 0) {
+  // 環境変数の検証
+  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    console.error("Firebase設定が不完全です。環境変数を確認してください。");
+    throw new Error("Firebase設定エラー: 環境変数が正しく設定されていません。");
+  }
   app = initializeApp(firebaseConfig);
 } else {
   app = getApps()[0];

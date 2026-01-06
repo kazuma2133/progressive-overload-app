@@ -9,6 +9,12 @@ export async function uploadPhoto(
   path: string
 ): Promise<string> {
   try {
+    // ファイルサイズのチェック（10MB制限）
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      throw new Error("画像ファイルが大きすぎます。10MB以下のファイルを選択してください。");
+    }
+    
     // Storage参照を作成
     const storageRef = ref(storage, `images/${path}`);
     
@@ -21,6 +27,22 @@ export async function uploadPhoto(
     return downloadURL;
   } catch (error) {
     console.error("画像のアップロード中にエラーが発生しました:", error);
+    
+    // エラーメッセージを改善
+    if (error instanceof Error) {
+      // Firebase Storageのエラーの場合
+      if ((error as any).code) {
+        const code = (error as any).code;
+        if (code === "storage/unauthorized") {
+          throw new Error("認証が必要です。ログインしてください。");
+        } else if (code === "storage/canceled") {
+          throw new Error("アップロードがキャンセルされました。");
+        } else if (code === "storage/unknown") {
+          throw new Error("ネットワークエラーが発生しました。接続を確認してください。");
+        }
+      }
+    }
+    
     throw error;
   }
 }

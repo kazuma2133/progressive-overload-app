@@ -67,8 +67,9 @@ export default function PhotoUploadForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 認証チェック
-    if (!authenticated) {
+    // 認証チェック（再確認）
+    const currentAuth = isAuthenticated();
+    if (!currentAuth) {
       setAuthModalOpen(true);
       return;
     }
@@ -135,8 +136,39 @@ export default function PhotoUploadForm() {
       if (bodyInput) bodyInput.value = "";
     } catch (error) {
       console.error("エラーが発生しました:", error);
-      const errorMessage = error instanceof Error ? error.message : "不明なエラー";
-      alert(`保存に失敗しました: ${errorMessage}\n\nブラウザの開発者ツール（F12）のコンソールを確認してください。`);
+      
+      // エラーの詳細を取得
+      let errorMessage = "不明なエラー";
+      let errorCode = "";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Firebaseエラーの場合、コードを取得
+        if ((error as any).code) {
+          errorCode = (error as any).code;
+        }
+      }
+      
+      // エラーの種類に応じたメッセージを表示
+      let userMessage = "保存に失敗しました。";
+      
+      if (errorCode) {
+        if (errorCode.includes("auth/")) {
+          userMessage += "\n\n認証エラーが発生しました。もう一度ログインしてください。";
+        } else if (errorCode.includes("storage/")) {
+          userMessage += "\n\n画像のアップロードに失敗しました。ネットワーク接続を確認してください。";
+        } else if (errorCode.includes("firestore/")) {
+          userMessage += "\n\nデータの保存に失敗しました。ネットワーク接続を確認してください。";
+        } else {
+          userMessage += `\n\nエラーコード: ${errorCode}`;
+        }
+      } else {
+        userMessage += `\n\n${errorMessage}`;
+      }
+      
+      userMessage += "\n\n問題が続く場合は、ページをリロードして再度お試しください。";
+      
+      alert(userMessage);
     } finally {
       setIsUploading(false);
     }

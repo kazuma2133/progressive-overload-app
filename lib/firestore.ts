@@ -52,6 +52,20 @@ export async function saveTrainingRecord(data: {
     return docRef.id;
   } catch (error) {
     console.error("記録の保存中にエラーが発生しました:", error);
+    
+    // エラーメッセージを改善
+    if (error instanceof Error) {
+      // Firestoreのエラーの場合
+      if ((error as any).code) {
+        const code = (error as any).code;
+        if (code === "permission-denied") {
+          throw new Error("保存の権限がありません。ログインしてください。");
+        } else if (code === "unavailable") {
+          throw new Error("ネットワークエラーが発生しました。接続を確認してください。");
+        }
+      }
+    }
+    
     throw error;
   }
 }
