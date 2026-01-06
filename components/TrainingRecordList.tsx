@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getTrainingRecords, TrainingRecord, deleteTrainingRecord } from "@/lib/mockStorage";
-import { isAuthenticated } from "@/lib/auth";
+import { getTrainingRecords, deleteTrainingRecord } from "@/lib/firestore";
+import { TrainingRecord } from "@/lib/mockStorage";
+import { isAuthenticated, onAuthStateChange } from "@/lib/firebaseAuth";
 import EditRecordModal from "./EditRecordModal";
 import PhotoModal from "./PhotoModal";
 import CommentSection from "./CommentSection";
@@ -23,29 +24,35 @@ export default function TrainingRecordList() {
   const [authenticated, setAuthenticated] = useState(false);
 
   // 記録を読み込む
-  const loadRecords = () => {
-    const data = getTrainingRecords();
-    setRecords(data);
+  const loadRecords = async () => {
+    try {
+      const data = await getTrainingRecords();
+      setRecords(data);
+    } catch (error) {
+      console.error("記録の読み込みエラー:", error);
+    }
   };
 
-  // コンポーネントのマウント時と、ストレージが変更された時に読み込む
+  // コンポーネントのマウント時と、データが変更された時に読み込む
   useEffect(() => {
     loadRecords();
     // 認証状態を確認
     setAuthenticated(isAuthenticated());
     
-    // ストレージの変更を監視（他のタブで変更があった場合など）
-    const handleStorageChange = () => {
-      loadRecords();
-      setAuthenticated(isAuthenticated());
-    };
-    window.addEventListener("storage", handleStorageChange);
+    // 認証状態の変更を監視
+    const unsubscribe = onAuthStateChange((user) => {
+      setAuthenticated(user !== null);
+    });
+
     // カスタムイベントで同じタブ内の変更も検知
-    window.addEventListener("trainingRecordUpdated", handleStorageChange);
+    const handleRecordUpdated = () => {
+      loadRecords();
+    };
+    window.addEventListener("trainingRecordUpdated", handleRecordUpdated);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("trainingRecordUpdated", handleStorageChange);
+      unsubscribe();
+      window.removeEventListener("trainingRecordUpdated", handleRecordUpdated);
     };
   }, []);
 
@@ -69,16 +76,21 @@ export default function TrainingRecordList() {
   };
 
   // 削除ボタンのクリック
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!authenticated) {
       setAuthModalOpen(true);
       return;
     }
     if (confirm("この記録を削除してもよろしいですか？")) {
-      deleteTrainingRecord(id);
-      window.dispatchEvent(new Event("trainingRecordUpdated"));
-      loadRecords();
-      alert("記録を削除しました");
+      try {
+        await deleteTrainingRecord(id);
+        window.dispatchEvent(new Event("trainingRecordUpdated"));
+        await loadRecords();
+        alert("記録を削除しました");
+      } catch (error) {
+        console.error("削除エラー:", error);
+        alert("削除に失敗しました。もう一度お試しください。");
+      }
     }
   };
 

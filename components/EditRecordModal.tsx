@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrainingRecord, fileToBase64, updateTrainingRecord } from "@/lib/mockStorage";
+import { TrainingRecord } from "@/lib/mockStorage";
+import { updateTrainingRecord } from "@/lib/firestore";
+import { uploadPhoto } from "@/lib/firebaseStorage";
 import PhotoModal from "./PhotoModal";
 
 interface EditRecordModalProps {

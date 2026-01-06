@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Comment, addComment, deleteComment } from "@/lib/mockStorage";
+import { Comment } from "@/lib/mockStorage";
+import { addComment, deleteComment } from "@/lib/firestore";
 
 interface CommentSectionProps {
   recordId: string;

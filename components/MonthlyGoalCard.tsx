@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import {
-  getCurrentMonthGoal,
+  getMonthlyGoalForCurrentMonth,
   saveMonthlyGoal,
   updateMonthlyGoal,
   deleteMonthlyGoal,
-  MonthlyGoal,
-  TrainingRecord,
-} from "@/lib/mockStorage";
+} from "@/lib/firestore";
+import { MonthlyGoal, TrainingRecord } from "@/lib/mockStorage";
 
 interface MonthlyGoalCardProps {
   records: TrainingRecord[];
@@ -30,17 +29,21 @@ export default function MonthlyGoalCard({
     loadGoal();
   }, []);
 
-  const loadGoal = () => {
-    const currentGoal = getCurrentMonthGoal();
-    setGoal(currentGoal);
-    if (currentGoal) {
-      setTitle(currentGoal.title);
-      setTargetValue(currentGoal.targetValue?.toString() || "");
-      setDescription(currentGoal.description || "");
-    } else {
-      setTitle("");
-      setTargetValue("");
-      setDescription("");
+  const loadGoal = async () => {
+    try {
+      const currentGoal = await getMonthlyGoalForCurrentMonth();
+      setGoal(currentGoal);
+      if (currentGoal) {
+        setTitle(currentGoal.title);
+        setTargetValue(currentGoal.targetValue?.toString() || "");
+        setDescription(currentGoal.description || "");
+      } else {
+        setTitle("");
+        setTargetValue("");
+        setDescription("");
+      }
+    } catch (error) {
+      console.error("目標の読み込みに失敗しました:", error);
     }
   };
 
@@ -85,7 +88,7 @@ export default function MonthlyGoalCard({
     return null;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       alert("目標のタイトルを入力してください");
       return;
@@ -105,33 +108,45 @@ export default function MonthlyGoalCard({
     const now = new Date();
     const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    if (goal) {
-      // 更新
-      updateMonthlyGoal(goal.id, {
-        title: title.trim(),
-        targetValue: targetValue ? parseFloat(targetValue) : undefined,
-        description: description.trim() || undefined,
-      });
-    } else {
-      // 新規作成
-      saveMonthlyGoal({
-        yearMonth,
-        title: title.trim(),
-        targetValue: targetValue ? parseFloat(targetValue) : undefined,
-        description: description.trim() || undefined,
-      });
-    }
+    try {
+      if (goal) {
+        // 更新
+        await updateMonthlyGoal(goal.id, {
+          title: title.trim(),
+          targetValue: targetValue ? parseFloat(targetValue) : undefined,
+          description: description.trim() || undefined,
+        });
+      } else {
+        // 新規作成
+        await saveMonthlyGoal({
+          yearMonth,
+          title: title.trim(),
+          targetValue: targetValue ? parseFloat(targetValue) : undefined,
+          description: description.trim() || undefined,
+        });
+      }
 
-    loadGoal();
-    setIsEditing(false);
-    onGoalUpdated();
+      await loadGoal();
+      setIsEditing(false);
+      onGoalUpdated();
+      alert("目標を保存しました！");
+    } catch (error) {
+      console.error("目標の保存に失敗しました:", error);
+      alert("目標の保存に失敗しました。もう一度お試しください。");
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (goal && confirm("この目標を削除してもよろしいですか？")) {
-      deleteMonthlyGoal(goal.id);
-      loadGoal();
-      onGoalUpdated();
+      try {
+        await deleteMonthlyGoal(goal.id);
+        await loadGoal();
+        onGoalUpdated();
+        alert("目標を削除しました");
+      } catch (error) {
+        console.error("目標の削除に失敗しました:", error);
+        alert("目標の削除に失敗しました。もう一度お試しください。");
+      }
     }
   };
 

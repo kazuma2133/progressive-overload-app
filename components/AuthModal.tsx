@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { authenticate } from "@/lib/auth";
+import { login } from "@/lib/firebaseAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,24 +14,32 @@ export default function AuthModal({
   onClose,
   onAuthenticated,
 }: AuthModalProps) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);
 
-    if (authenticate(password)) {
-      onAuthenticated();
-      setPassword("");
-      onClose();
-    } else {
-      setError("パスワードが正しくありません");
+    try {
+      const success = await login(email, password);
+      if (success) {
+        onAuthenticated();
+        setEmail("");
+        setPassword("");
+        onClose();
+      } else {
+        setError("メールアドレスまたはパスワードが正しくありません");
+      }
+    } catch (err) {
+      console.error("ログインエラー:", err);
+      setError("ログインに失敗しました。もう一度お試しください。");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   if (!isOpen) return null;
@@ -49,6 +57,25 @@ export default function AuthModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              メールアドレス
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              placeholder="your-email@example.com"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
@@ -62,7 +89,6 @@ export default function AuthModal({
               className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
               placeholder="パスワードを入力"
               required
-              autoFocus
             />
             {error && (
               <p className="mt-2 text-sm text-red-600">{error}</p>

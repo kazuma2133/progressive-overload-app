@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fileToBase64, saveTrainingRecord } from "@/lib/mockStorage";
-import { isAuthenticated } from "@/lib/auth";
+import { saveTrainingRecord } from "@/lib/firestore";
+import { uploadPhoto } from "@/lib/firebaseStorage";
+import { isAuthenticated, onAuthStateChange } from "@/lib/firebaseAuth";
 import AuthModal from "./AuthModal";
 
 export default function PhotoUploadForm() {
@@ -27,6 +28,11 @@ export default function PhotoUploadForm() {
   // 認証状態を確認
   useEffect(() => {
     setAuthenticated(isAuthenticated());
+    // 認証状態の変更を監視
+    const unsubscribe = onAuthStateChange((user) => {
+      setAuthenticated(user !== null);
+    });
+    return () => unsubscribe();
   }, []);
 
   // メニュー写真の選択
@@ -82,22 +88,21 @@ export default function PhotoUploadForm() {
     setIsUploading(true);
 
     try {
-      // 写真をBase64に変換（写真がある場合のみ）
-      const photoPromises: Promise<string | undefined>[] = [];
+      // 写真をFirebase Storageにアップロード（写真がある場合のみ）
+      let menuPhotoUrl: string | undefined = undefined;
+      let bodyPhotoUrl: string | undefined = undefined;
+
       if (menuPhoto) {
-        photoPromises.push(fileToBase64(menuPhoto));
-      } else {
-        photoPromises.push(Promise.resolve(undefined));
+        const timestamp = Date.now();
+        menuPhotoUrl = await uploadPhoto(menuPhoto, `menu/${timestamp}_${menuPhoto.name}`);
       }
+
       if (bodyPhoto) {
-        photoPromises.push(fileToBase64(bodyPhoto));
-      } else {
-        photoPromises.push(Promise.resolve(undefined));
+        const timestamp = Date.now();
+        bodyPhotoUrl = await uploadPhoto(bodyPhoto, `body/${timestamp}_${bodyPhoto.name}`);
       }
 
-      const [menuPhotoUrl, bodyPhotoUrl] = await Promise.all(photoPromises);
-
-      // データをローカルストレージに保存
+      // データをFirestoreに保存
       await saveTrainingRecord({
         date,
         menuPhotoUrl,
