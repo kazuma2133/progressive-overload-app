@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   Timestamp,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { TrainingRecord, Comment, MonthlyGoal } from "./mockStorage";
@@ -43,12 +44,27 @@ export async function saveTrainingRecord(data: {
   weight?: number;
 }): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, TRAINING_RECORDS_COLLECTION), {
-      ...data,
+    // Firestoreはundefinedをサポートしていないため、undefinedの値を除外
+    const firestoreData: any = {
+      date: data.date,
+      memo: data.memo || "",
       createdAt: Timestamp.now(),
       comments: [],
       likes: 0,
-    });
+    };
+    
+    // undefinedでない値のみを追加
+    if (data.menuPhotoUrl !== undefined && data.menuPhotoUrl !== null) {
+      firestoreData.menuPhotoUrl = data.menuPhotoUrl;
+    }
+    if (data.bodyPhotoUrl !== undefined && data.bodyPhotoUrl !== null) {
+      firestoreData.bodyPhotoUrl = data.bodyPhotoUrl;
+    }
+    if (data.weight !== undefined && data.weight !== null) {
+      firestoreData.weight = data.weight;
+    }
+    
+    const docRef = await addDoc(collection(db, TRAINING_RECORDS_COLLECTION), firestoreData);
     return docRef.id;
   } catch (error) {
     console.error("記録の保存中にエラーが発生しました:", error);
@@ -62,6 +78,8 @@ export async function saveTrainingRecord(data: {
           throw new Error("保存の権限がありません。ログインしてください。");
         } else if (code === "unavailable") {
           throw new Error("ネットワークエラーが発生しました。接続を確認してください。");
+        } else if (code === "invalid-argument") {
+          throw new Error("データの形式が正しくありません。入力内容を確認してください。");
         }
       }
     }
@@ -114,10 +132,50 @@ export async function updateTrainingRecord(
   }
 ): Promise<void> {
   try {
+    // Firestoreはundefinedをサポートしていないため、undefinedの値を除外
+    const firestoreData: any = {
+      date: data.date,
+      memo: data.memo || "",
+    };
+    
+    // undefinedでない値のみを追加（undefinedの場合は更新しない）
+    if (data.menuPhotoUrl !== undefined && data.menuPhotoUrl !== null) {
+      firestoreData.menuPhotoUrl = data.menuPhotoUrl;
+    } else if (data.menuPhotoUrl === null) {
+      // nullの場合は、FirestoreのdeleteField()を使用して削除
+      firestoreData.menuPhotoUrl = deleteField();
+    }
+    // undefinedの場合は、そのフィールドを更新しない（既存の値を保持）
+    
+    if (data.bodyPhotoUrl !== undefined && data.bodyPhotoUrl !== null) {
+      firestoreData.bodyPhotoUrl = data.bodyPhotoUrl;
+    } else if (data.bodyPhotoUrl === null) {
+      firestoreData.bodyPhotoUrl = deleteField();
+    }
+    // undefinedの場合は、そのフィールドを更新しない（既存の値を保持）
+    
+    if (data.weight !== undefined && data.weight !== null) {
+      firestoreData.weight = data.weight;
+    } else if (data.weight === null) {
+      firestoreData.weight = deleteField();
+    }
+    // undefinedの場合は、そのフィールドを更新しない（既存の値を保持）
+    
     const docRef = doc(db, TRAINING_RECORDS_COLLECTION, id);
-    await updateDoc(docRef, data);
+    await updateDoc(docRef, firestoreData);
   } catch (error) {
     console.error("記録の更新中にエラーが発生しました:", error);
+    
+    // エラーメッセージを改善
+    if (error instanceof Error) {
+      if ((error as any).code) {
+        const code = (error as any).code;
+        if (code === "invalid-argument") {
+          throw new Error("データの形式が正しくありません。入力内容を確認してください。");
+        }
+      }
+    }
+    
     throw error;
   }
 }
