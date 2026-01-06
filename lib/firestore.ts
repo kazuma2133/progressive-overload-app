@@ -258,13 +258,41 @@ export async function saveMonthlyGoal(
   goal: Omit<MonthlyGoal, "id" | "createdAt">
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, MONTHLY_GOALS_COLLECTION), {
-      ...goal,
+    // Firestoreはundefinedをサポートしていないため、undefinedの値を除外
+    const firestoreData: any = {
+      yearMonth: goal.yearMonth,
+      title: goal.title,
       createdAt: Timestamp.now(),
-    });
+    };
+    
+    // undefinedでない値のみを追加
+    if (goal.targetValue !== undefined && goal.targetValue !== null) {
+      firestoreData.targetValue = goal.targetValue;
+    }
+    if (goal.currentValue !== undefined && goal.currentValue !== null) {
+      firestoreData.currentValue = goal.currentValue;
+    }
+    if (goal.description !== undefined && goal.description !== null && goal.description !== "") {
+      firestoreData.description = goal.description;
+    }
+    
+    const docRef = await addDoc(collection(db, MONTHLY_GOALS_COLLECTION), firestoreData);
     return docRef.id;
   } catch (error) {
     console.error("月間目標の保存中にエラーが発生しました:", error);
+    
+    // エラーメッセージを改善
+    if (error instanceof Error) {
+      if ((error as any).code) {
+        const code = (error as any).code;
+        if (code === "invalid-argument") {
+          throw new Error("データの形式が正しくありません。入力内容を確認してください。");
+        } else if (code === "permission-denied") {
+          throw new Error("保存の権限がありません。ログインしてください。");
+        }
+      }
+    }
+    
     throw error;
   }
 }
@@ -313,10 +341,46 @@ export async function updateMonthlyGoal(
   data: Partial<Omit<MonthlyGoal, "id" | "createdAt" | "yearMonth">>
 ): Promise<void> {
   try {
+    // Firestoreはundefinedをサポートしていないため、undefinedの値を除外
+    const firestoreData: any = {};
+    
+    // undefinedでない値のみを追加
+    if (data.title !== undefined && data.title !== null) {
+      firestoreData.title = data.title;
+    }
+    if (data.targetValue !== undefined && data.targetValue !== null) {
+      firestoreData.targetValue = data.targetValue;
+    } else if (data.targetValue === null) {
+      firestoreData.targetValue = deleteField();
+    }
+    if (data.currentValue !== undefined && data.currentValue !== null) {
+      firestoreData.currentValue = data.currentValue;
+    } else if (data.currentValue === null) {
+      firestoreData.currentValue = deleteField();
+    }
+    if (data.description !== undefined && data.description !== null && data.description !== "") {
+      firestoreData.description = data.description;
+    } else if (data.description === null || data.description === "") {
+      firestoreData.description = deleteField();
+    }
+    
     const docRef = doc(db, MONTHLY_GOALS_COLLECTION, id);
-    await updateDoc(docRef, data);
+    await updateDoc(docRef, firestoreData);
   } catch (error) {
     console.error("月間目標の更新中にエラーが発生しました:", error);
+    
+    // エラーメッセージを改善
+    if (error instanceof Error) {
+      if ((error as any).code) {
+        const code = (error as any).code;
+        if (code === "invalid-argument") {
+          throw new Error("データの形式が正しくありません。入力内容を確認してください。");
+        } else if (code === "permission-denied") {
+          throw new Error("更新の権限がありません。ログインしてください。");
+        }
+      }
+    }
+    
     throw error;
   }
 }

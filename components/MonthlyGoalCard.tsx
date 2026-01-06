@@ -132,7 +132,14 @@ export default function MonthlyGoalCard({
       alert("目標を保存しました！");
     } catch (error) {
       console.error("目標の保存に失敗しました:", error);
-      alert("目標の保存に失敗しました。もう一度お試しください。");
+      
+      // エラーの詳細を取得
+      let errorMessage = "目標の保存に失敗しました。";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      alert(`${errorMessage}\n\n問題が続く場合は、ページをリロードして再度お試しください。`);
     }
   };
 
