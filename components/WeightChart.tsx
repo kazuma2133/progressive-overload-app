@@ -87,7 +87,10 @@ export default function WeightChart({ records }: WeightChartProps) {
               borderRadius: "8px",
               boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             }}
-            formatter={(value: number) => [`${value} kg`, "体重"]}
+            formatter={(value: number | undefined) => {
+              if (value === undefined) return ["", "体重"];
+              return [`${value} kg`, "体重"];
+            }}
             labelStyle={{ fontWeight: "bold", color: "#333" }}
           />
           <Line
