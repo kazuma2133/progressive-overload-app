@@ -67,12 +67,13 @@ export default function PhotoUploadForm() {
       return;
     }
 
-    if (!menuPhoto || !bodyPhoto) {
-      alert("写真を2枚とも選択してください");
+    // 入力値の検証
+    // 写真、メモ、体重のいずれかがあれば保存可能
+    if (!menuPhoto && !bodyPhoto && !memo.trim() && !weight) {
+      alert("写真、メモ、体重のいずれかを入力してください");
       return;
     }
 
-    // 入力値の検証（長さ制限）
     if (memo.length > 2000) {
       alert("メモは2000文字以内で入力してください");
       return;
@@ -81,11 +82,20 @@ export default function PhotoUploadForm() {
     setIsUploading(true);
 
     try {
-      // 写真をBase64に変換（モック版）
-      const [menuPhotoUrl, bodyPhotoUrl] = await Promise.all([
-        fileToBase64(menuPhoto),
-        fileToBase64(bodyPhoto),
-      ]);
+      // 写真をBase64に変換（写真がある場合のみ）
+      const photoPromises: Promise<string | undefined>[] = [];
+      if (menuPhoto) {
+        photoPromises.push(fileToBase64(menuPhoto));
+      } else {
+        photoPromises.push(Promise.resolve(undefined));
+      }
+      if (bodyPhoto) {
+        photoPromises.push(fileToBase64(bodyPhoto));
+      } else {
+        photoPromises.push(Promise.resolve(undefined));
+      }
+
+      const [menuPhotoUrl, bodyPhotoUrl] = await Promise.all(photoPromises);
 
       // データをローカルストレージに保存
       await saveTrainingRecord({
@@ -160,7 +170,7 @@ export default function PhotoUploadForm() {
             htmlFor="menuPhoto"
             className="block text-sm font-medium text-gray-700"
           >
-            トレーニングメニューの写真
+            トレーニングメニューの写真（任意）
           </label>
           <input
             type="file"
@@ -168,8 +178,8 @@ export default function PhotoUploadForm() {
             accept="image/*"
             onChange={handleMenuPhotoChange}
             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-            required
           />
+          <p className="mt-1 text-xs text-gray-500">任意：写真がない場合は空欄のままでも保存できます</p>
           {menuPreview && (
             <div className="mt-4">
               <img
@@ -195,8 +205,8 @@ export default function PhotoUploadForm() {
             accept="image/*"
             onChange={handleBodyPhotoChange}
             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-            required
           />
+          <p className="mt-1 text-xs text-gray-500">任意：写真がない場合は空欄のままでも保存できます</p>
           {bodyPreview && (
             <div className="mt-4">
               <img

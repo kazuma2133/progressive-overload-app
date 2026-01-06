@@ -20,8 +20,8 @@ export interface MonthlyGoal {
 export interface TrainingRecord {
   id: string;
   date: string;
-  menuPhotoUrl: string;
-  bodyPhotoUrl: string;
+  menuPhotoUrl?: string; // トレーニングメニューの写真（任意）
+  bodyPhotoUrl?: string; // 体の写真（任意）
   memo: string;
   weight?: number; // 体重（kg）
   likes?: number; // いいね数
@@ -52,8 +52,8 @@ export function fileToBase64(file: File): Promise<string> {
 // トレーニング記録を保存
 export async function saveTrainingRecord(data: {
   date: string;
-  menuPhotoUrl: string;
-  bodyPhotoUrl: string;
+  menuPhotoUrl?: string;
+  bodyPhotoUrl?: string;
   memo: string;
   weight?: number;
 }): Promise<string> {
@@ -95,8 +95,8 @@ export function updateTrainingRecord(
   id: string,
   data: {
     date: string;
-    menuPhotoUrl: string;
-    bodyPhotoUrl: string;
+    menuPhotoUrl?: string;
+    bodyPhotoUrl?: string;
     memo: string;
     weight?: number;
   }

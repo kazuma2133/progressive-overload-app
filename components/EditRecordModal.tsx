@@ -22,8 +22,8 @@ export default function EditRecordModal({
   const [weight, setWeight] = useState<string>(record.weight?.toString() || "");
   const [menuPhoto, setMenuPhoto] = useState<File | null>(null);
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null);
-  const [menuPreview, setMenuPreview] = useState<string | null>(record.menuPhotoUrl);
-  const [bodyPreview, setBodyPreview] = useState<string | null>(record.bodyPhotoUrl);
+  const [menuPreview, setMenuPreview] = useState<string | null>(record.menuPhotoUrl || null);
+  const [bodyPreview, setBodyPreview] = useState<string | null>(record.bodyPhotoUrl || null);
   const [isSaving, setIsSaving] = useState(false);
   const [photoModal, setPhotoModal] = useState<{
     imageUrl: string;
@@ -36,8 +36,8 @@ export default function EditRecordModal({
       setDate(record.date);
       setMemo(record.memo);
       setWeight(record.weight?.toString() || "");
-      setMenuPreview(record.menuPhotoUrl);
-      setBodyPreview(record.bodyPhotoUrl);
+      setMenuPreview(record.menuPhotoUrl || null);
+      setBodyPreview(record.bodyPhotoUrl || null);
       setMenuPhoto(null);
       setBodyPhoto(null);
     }
@@ -81,16 +81,22 @@ export default function EditRecordModal({
       // 新しい写真が選択されていたら変換
       if (menuPhoto) {
         menuPhotoUrl = await fileToBase64(menuPhoto);
+      } else if (!record.menuPhotoUrl) {
+        // 写真がなく、既存の写真もない場合は空文字
+        menuPhotoUrl = undefined;
       }
       if (bodyPhoto) {
         bodyPhotoUrl = await fileToBase64(bodyPhoto);
+      } else if (!record.bodyPhotoUrl) {
+        // 写真がなく、既存の写真もない場合は空文字
+        bodyPhotoUrl = undefined;
       }
 
       // データを更新
       updateTrainingRecord(record.id, {
         date,
-        menuPhotoUrl,
-        bodyPhotoUrl,
+        menuPhotoUrl: menuPhotoUrl || undefined,
+        bodyPhotoUrl: bodyPhotoUrl || undefined,
         memo,
         weight: weight ? parseFloat(weight) : undefined,
       });

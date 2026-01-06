@@ -148,39 +148,63 @@ export default function TrainingRecordList() {
             </div>
 
             {/* 写真を横並びで表示 */}
-            <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* メニュー写真 */}
-              <div>
-                <p className="mb-2 text-sm font-medium text-gray-700">
-                  トレーニングメニュー
-                </p>
-                <div className="relative overflow-hidden rounded-xl border-2 border-orange-200/50 shadow-md transition-all hover:border-orange-400 hover:shadow-xl">
-                  <img
-                    src={record.menuPhotoUrl}
-                    alt="トレーニングメニュー"
-                    onClick={() => handlePhotoClick(record.menuPhotoUrl, "トレーニングメニュー")}
-                    className="w-full cursor-pointer object-cover transition-transform hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity hover:opacity-100"></div>
-                </div>
-              </div>
+            {(record.menuPhotoUrl || record.bodyPhotoUrl) && (
+              <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* メニュー写真 */}
+                {record.menuPhotoUrl ? (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-gray-700">
+                      トレーニングメニュー
+                    </p>
+                    <div className="relative overflow-hidden rounded-xl border-2 border-orange-200/50 shadow-md transition-all hover:border-orange-400 hover:shadow-xl">
+                      <img
+                        src={record.menuPhotoUrl}
+                        alt="トレーニングメニュー"
+                        onClick={() => handlePhotoClick(record.menuPhotoUrl!, "トレーニングメニュー")}
+                        className="w-full cursor-pointer object-cover transition-transform hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity hover:opacity-100"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-gray-700">
+                      トレーニングメニュー
+                    </p>
+                    <div className="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50">
+                      <p className="text-sm text-gray-400">写真なし</p>
+                    </div>
+                  </div>
+                )}
 
-              {/* 体の写真 */}
-              <div>
-                <p className="mb-2 text-sm font-medium text-gray-700">
-                  体の写真
-                </p>
-                <div className="relative overflow-hidden rounded-xl border-2 border-orange-200/50 shadow-md transition-all hover:border-orange-400 hover:shadow-xl">
-                  <img
-                    src={record.bodyPhotoUrl}
-                    alt="体の写真"
-                    onClick={() => handlePhotoClick(record.bodyPhotoUrl, "体の写真")}
-                    className="w-full cursor-pointer object-cover transition-transform hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity hover:opacity-100"></div>
-                </div>
+                {/* 体の写真 */}
+                {record.bodyPhotoUrl ? (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-gray-700">
+                      体の写真
+                    </p>
+                    <div className="relative overflow-hidden rounded-xl border-2 border-orange-200/50 shadow-md transition-all hover:border-orange-400 hover:shadow-xl">
+                      <img
+                        src={record.bodyPhotoUrl}
+                        alt="体の写真"
+                        onClick={() => handlePhotoClick(record.bodyPhotoUrl!, "体の写真")}
+                        className="w-full cursor-pointer object-cover transition-transform hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity hover:opacity-100"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-gray-700">
+                      体の写真
+                    </p>
+                    <div className="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50">
+                      <p className="text-sm text-gray-400">写真なし</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* 体重 */}
             {record.weight !== undefined && (
